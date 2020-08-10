@@ -1,0 +1,146 @@
+- hosts: node1
+  
+  become: true
+
+  tasks:
+  - name: Install apache
+    yum:
+      name: httpd
+      state: latest
+
+  - name: Open apache    
+    firewalld:
+      immediate: true
+      permanent: true
+      service: http
+      state: enabled
+
+  - name: Add repository
+    yum:
+      name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  
+  - name: Add repository2
+    yum:
+      name: https://rpms.remirepo.net/enterprise/remi-release-7.rpm
+  
+  - name: Config namager
+    command:
+      cmd: yum-config-manager --enable remi-php74
+
+  - name: Install php
+    yum:
+      name: php, php-mysql
+  
+  - name: Restart Apache
+    service:
+      name: httpd
+      state: restarted
+      enabled: true
+  
+  - name: Get wordpress
+    get_url:
+      dest: /tmp/latest.tar.gz
+      url: https://wordpress.org/latest.tar.gz
+
+  - name: Unzip wordpress
+    unarchive:
+      remote_src: yes
+      src: /tmp/latest.tar.gz
+      dest: /tmp/
+  
+  - name: Copy wordpress
+    copy:
+      remote_src: yes
+      src: /tmp/wordpress/
+      dest: /var/www/html/wordpress/
+
+  - name: Copy wp-config
+    copy:
+      src: /var/www/html/wordpress/wp-config-sample.php
+      dest: /var/www/html/wordpress/wp-config.php
+      remote_src: yes
+  
+  - name: Change_db_name
+    replace:
+      path: /var/www/html/wordpress/wp-config.php
+      regexp: database_name_here
+      replace: wordpress
+  
+  - name: Change_user_name
+    replace:
+      dest: /var/www/html/wordpress/wp-config.php
+      regexp: username_here
+      replace: wpadmin
+
+  - name: Change_user_pw
+    replace:
+      dest: /var/www/html/wordpress/wp-config.php
+      regexp: password_here
+      replace: wpadmin
+  
+  - name: Change_host
+    replace:
+      dest: /var/www/html/wordpress/wp-config.php
+      regexp: localhost
+      replace: 192.168.122.52
+
+  - name: Add repository mariadb
+    yum_repository:
+      name: MariaDB
+      description: MariaDB
+      baseurl: http://yum.mariadb.org/10.5.4/centos7-amd64/
+      gpgkey: https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+      gpgcheck: 1
+
+  - name: Install MariaDB-server
+    yum:
+      name: MariaDB-server
+  
+  - name: Start mariadb
+    service:
+      name: mariadb
+      state: started
+      enabled: true
+  
+  - name: Open mysql
+    firewalld:
+      immediate: true
+      permanent: true
+      service: mysql
+      state: enabled
+  
+  - name: Install MySQL-python module
+    yum:
+      name: MySQL-python
+      state: latest
+  
+  - name: Change root passwd
+    mysql_user:
+      name: root
+      login_user: root
+      login_password: ''
+      login_host: localhost
+      password: toor
+  
+  - name: Create db
+    mysql_db:
+      name: wordpress
+      login_user: root
+      login_host: localhost
+    
+  - name: Set privilege
+    mysql_user:
+      name: wpadmin
+      password: wpadmin
+      login_user: root
+      login_host: localhost
+      priv: wordpress.*:ALL,GRANT
+      host: '%'
+      state: present
+
+
+      
+
+
+    
+

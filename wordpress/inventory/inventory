@@ -1,0 +1,7 @@
+[control]
+controller ansible_host=192.168.123.41 ansible_connection=local
+
+[manage]
+node1 ansible_host=192.168.123.51
+node2 ansible_host=192.168.123.52
+

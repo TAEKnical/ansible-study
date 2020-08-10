@@ -84,6 +84,11 @@
       regexp: localhost
       replace: 192.168.122.52
 
+- hosts: node2
+
+  become: true
+
+  tasks:
   - name: Add repository mariadb
     yum_repository:
       name: MariaDB
@@ -126,6 +131,7 @@
     mysql_db:
       name: wordpress
       login_user: root
+      login_password: toor
       login_host: localhost
     
   - name: Set privilege
@@ -133,6 +139,7 @@
       name: wpadmin
       password: wpadmin
       login_user: root
+      login_password: toor
       login_host: localhost
       priv: wordpress.*:ALL,GRANT
       host: '%'
